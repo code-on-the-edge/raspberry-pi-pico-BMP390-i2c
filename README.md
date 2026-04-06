@@ -1,4 +1,9 @@
 # Raspberry Pi Pico BMP390 i2c
+Datasheet:
+https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp390-ds002.pdf
+
+BMP390 Sensor:
+https://www.adafruit.com/product/4816?srsltid=AfmBOop29ZVR_zyBhivlruXImrveF35bImaKz6JXvaEYeZe19oaMwVZS
 
 # Raspberry Pi Pico 1 and 2 Setup
 
