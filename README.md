@@ -51,4 +51,4 @@ Getting started with Raspberry Pi Pico-series
 * https://pip-assets.raspberrypi.com/categories/610-raspberry-pi-pico/documents/RP-008276-DS-1-getting-started-with-pico.pdf?disposition=inline
 
 Picotool
-* https://github.com/raspberrypi/picotool# raspberry-pi-pico-BMP390-i2c
+* https://github.com/raspberrypi/picotool
