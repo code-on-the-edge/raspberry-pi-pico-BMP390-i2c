@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.13)
 #   pico   -> RP2040 (original Pico)
 #   pico2  -> RP2350 (Pico 2)
 # NOTE: Must be set BEFORE pico_sdk_import.cmake
-set(PICO_BOARD pico CACHE STRING "Board type")
+set(PICO_BOARD pico2 CACHE STRING "Board type")
 
 # Import the Pico SDK (path comes from PICO_SDK_PATH env variable)
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)

@@ -5,17 +5,21 @@
 
 // PICO I2C
 #define I2C_PORT i2c0
-#define I2C_SDA 8
-#define I2C_SCL 9
+#define I2C_SDA 0
+#define I2C_SCL 1
 #define I2C_CLK_FREQ 400*1000
 
-// BMP390 I2C Address
+// BMP390 I2C Address 
+#define BMP390_I2C_ADDR              0x77
 #define BMP390_REG_CHIP_ID           0x00
 #define BMP390_CHIP_ID               0x60
 
 // Calibration data registers
 #define BMP390_CALIB_DATA_START      0x31
 #define BMP390_CALIB_DATA_LENGTH     21
+
+// Status registers
+#define BMP390_REG_STATUS            0x03
 
 // Data registers
 #define BMP390_REG_PRESS_MSB         0x04
@@ -24,6 +28,50 @@
 #define BMP390_REG_TEMP_MSB          0x07
 #define BMP390_REG_TEMP_LSB          0x08
 #define BMP390_REG_TEMP_XLSB         0x09
+
+// Control registers
+#define BMP390_REG_CMD               0x7E
+#define BMP390_REG_CONFIG            0x1F
+#define BMP390_REG_ODR               0x1D
+#define BMP390_REG_OSR               0x1C
+#define BMP390_REG_PWR_CTRL          0x1B
+#define BMP390_REG_IF_CONF           0x1A
+#define BMP390_REG_INT_CTRL          0x19
+
+
+// Configuration options
+#define BMP390_OSR_PRESSURE_x1       0x00
+#define BMP390_OSR_PRESSURE_x2       0x01
+#define BMP390_OSR_PRESSURE_x4       0x02
+#define BMP390_OSR_PRESSURE_x8       0x03
+#define BMP390_OSR_PRESSURE_x16      0x04
+#define BMP390_OSR_PRESSURE_x32      0x05
+
+#define BMP390_OSR_TEMPERATURE_x1    (0x00 << 3)
+#define BMP390_OSR_TEMPERATURE_x2    (0x01 << 3)
+#define BMP390_OSR_TEMPERATURE_x4    (0x02 << 3)
+#define BMP390_OSR_TEMPERATURE_x8    (0x03 << 3)
+#define BMP390_OSR_TEMPERATURE_x16   (0x04 << 3)
+#define BMP390_OSR_TEMPERATURE_x32   (0x05 << 3)
+
+#define BMP390_FILTER_COEFF_OFF      (0x00 << 1)
+#define BMP390_FILTER_COEFF_1        (0x01 << 1)
+#define BMP390_FILTER_COEFF_3        (0x02 << 1)
+#define BMP390_FILTER_COEFF_7        (0x03 << 1)
+#define BMP390_FILTER_COEFF_15       (0x04 << 1)
+#define BMP390_FILTER_COEFF_31       (0x05 << 1)
+#define BMP390_FILTER_COEFF_63       (0x06 << 1)
+#define BMP390_FILTER_COEFF_127      (0x07 << 1)
+
+#define BMP390_ODR_50      			 0x02
+#define BMP390_ODR_25      			 0x03
+
+#define BMP390_MODE_SLEEP            (0x00 << 4)
+#define BMP390_MODE_FORCED           (0x01 << 4)
+#define BMP390_MODE_NORMAL           (0x03 << 4)
+
+#define BMP390_PRESSURE_ON           0x1
+#define BMP390_TEMP_ON               (0x1 << 1)
 
 typedef struct {
     int8_t nvm_par_p11;
@@ -122,6 +170,7 @@ void bmp390_trim_param() {
 	uint8_t trimdata[BMP390_CALIB_DATA_LENGTH]={0};
 	// Read NVM from 0x31 to 0x45
 	// reg_read(spicore->spi_inst, spicore->csn_bmp390_pin, BMP390_CALIB_DATA_START, trimdata, BMP390_CALIB_DATA_LENGTH);
+    reg_read(I2C_PORT, BMP390_I2C_ADDR, BMP390_CALIB_DATA_START, trimdata, BMP390_CALIB_DATA_LENGTH);
 
     for (int i = 0; i < BMP390_CALIB_DATA_LENGTH; i++)
     {
@@ -129,20 +178,20 @@ void bmp390_trim_param() {
     }
     
 
-	bmp390_calib.nvm_par_t1 = ((uint16_t)trimdata[1+1]<<8) | trimdata[0+1];
-	bmp390_calib.nvm_par_t2 = ((uint16_t)trimdata[3+1]<<8) | trimdata[2+1];
-	bmp390_calib.nvm_par_t3 = trimdata[4+1];
-	bmp390_calib.nvm_par_p1 = ((uint16_t)trimdata[6+1]<<8) | trimdata[5+1];
-	bmp390_calib.nvm_par_p2 = ((uint16_t)trimdata[8+1]<<8) | trimdata[7+1];
-	bmp390_calib.nvm_par_p3 = trimdata[9+1];
-	bmp390_calib.nvm_par_p4 = ((uint16_t)trimdata[10+1]<<8);
-	bmp390_calib.nvm_par_p5 = ((uint16_t)trimdata[12+1]<<8) | trimdata[11+1];
-	bmp390_calib.nvm_par_p6 = ((uint16_t)trimdata[14+1]<<8) | trimdata[13+1];
-	bmp390_calib.nvm_par_p7 = ((uint16_t)trimdata[15+1]<<8);
-	bmp390_calib.nvm_par_p8 = ((uint16_t)trimdata[16+1]<<8);
-	bmp390_calib.nvm_par_p9 = ((uint16_t)trimdata[18+1]<<8) | trimdata[17+1];
-	bmp390_calib.nvm_par_p10 = trimdata[19+1];
-	bmp390_calib.nvm_par_p11 = trimdata[20+1];
+	bmp390_calib.nvm_par_t1 = ((uint16_t)trimdata[1]<<8) | trimdata[0];
+	bmp390_calib.nvm_par_t2 = ((uint16_t)trimdata[3]<<8) | trimdata[2];
+	bmp390_calib.nvm_par_t3 = trimdata[4];
+	bmp390_calib.nvm_par_p1 = ((uint16_t)trimdata[6]<<8) | trimdata[5];
+	bmp390_calib.nvm_par_p2 = ((uint16_t)trimdata[8]<<8) | trimdata[7];
+	bmp390_calib.nvm_par_p3 = trimdata[9];
+	bmp390_calib.nvm_par_p4 = ((uint16_t)trimdata[10]<<8);
+	bmp390_calib.nvm_par_p5 = ((uint16_t)trimdata[12]<<8) | trimdata[11];
+	bmp390_calib.nvm_par_p6 = ((uint16_t)trimdata[14]<<8) | trimdata[13];
+	bmp390_calib.nvm_par_p7 = ((uint16_t)trimdata[15]<<8);
+	bmp390_calib.nvm_par_p8 = ((uint16_t)trimdata[16]<<8);
+	bmp390_calib.nvm_par_p9 = ((uint16_t)trimdata[18]<<8) | trimdata[17];
+	bmp390_calib.nvm_par_p10 = trimdata[19];
+	bmp390_calib.nvm_par_p11 = trimdata[20];
 
 	calib_data.par_t1 = (double)bmp390_calib.nvm_par_t1 / pow(2,-8);
 	calib_data.par_t2 = (double)bmp390_calib.nvm_par_t2 / pow(2,30);
@@ -203,7 +252,18 @@ float BMP390_compensate_pressure(uint32_t uncomp_press, BMP390_calib_par *calib_
 
 void bmp390_init()
 {
+    uint8_t data;
+    data = BMP390_OSR_PRESSURE_x8 | BMP390_OSR_TEMPERATURE_x1;
+    reg_write(I2C_PORT, BMP390_I2C_ADDR, BMP390_REG_OSR, &data, 2);
 
+    data = BMP390_FILTER_COEFF_3;
+    reg_write(I2C_PORT, BMP390_I2C_ADDR, BMP390_REG_CONFIG, &data, 2);
+
+    data = BMP390_ODR_50;
+    reg_write(I2C_PORT, BMP390_I2C_ADDR, BMP390_REG_ODR, &data, 2);
+
+    data = BMP390_MODE_NORMAL | BMP390_TEMP_ON | BMP390_PRESSURE_ON;
+    reg_write(I2C_PORT, BMP390_I2C_ADDR, BMP390_REG_PWR_CTRL, &data, 2);
 }
 
 int bmp390_read_raw()
@@ -211,14 +271,15 @@ int bmp390_read_raw()
 	uint8_t RawData[6]={0};
     uint8_t reg = BMP390_REG_PRESS_MSB;
     // Spi::reg_read(spicore->spi_inst, spicore->csn_bmp390_pin, reg, RawData, 6);
+    reg_read(I2C_PORT, BMP390_I2C_ADDR, reg, RawData, 6);
     /* Calculate the Raw data for the parameters
         * Here the Pressure and Temperature are in 20 bit format and humidity in 16 bit format
         */
     bmp390_pRaw = (RawData[2]<<16)|(RawData[1]<<8)|(RawData[0]);
     bmp390_tRaw = (RawData[5]<<16)|(RawData[4]<<8)|(RawData[3]);
 
-    // printf("bmp390_pRaw: %lu\n\r", bmp390_pRaw);
-    // printf("bmp390_tRaw: %lu\n\r", bmp390_tRaw);
+    // printf("bmp390_pRaw: %x\n\r", bmp390_pRaw);
+    // printf("bmp390_tRaw: %x\n\r", bmp390_tRaw);
 
     return 0;
 }
@@ -254,7 +315,7 @@ void bmp390_measure()
 	else
 	{
 		bmp390_Temperature_C = bmp390_Pressure_Pa = 0;
-		// printf("BME280 detached %f\n\r", bmp390_Temperature_C);
+		printf("BME280 detached %f\n\r", bmp390_Temperature_C);
 	}
 
 }
